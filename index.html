@@ -480,6 +480,24 @@
             </div>
 
             <div class="input-group">
+                <label for="profPhone">Phone Number</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="tel" id="profPhone" placeholder="+1 555 123 4567">
+                    <button class="primary-btn" id="verify-phone-btn" onclick="handleLinkPhone()"
+                        style="width: auto; padding: 0 16px; margin: 0; font-size: 13px;">Verify</button>
+                </div>
+            </div>
+
+            <div id="phone-link-otp-group" class="input-group" style="display: none;">
+                <label for="profLinkCode">Enter SMS Code</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="profLinkCode" placeholder="6-digit code">
+                    <button class="primary-btn" onclick="verifyLinkCode()"
+                        style="width: auto; padding: 0 16px; margin: 0; font-size: 13px; background: var(--success);">Confirm</button>
+                </div>
+            </div>
+
+            <div class="input-group">
                 <label for="profBio">Short Bio</label>
                 <input type="text" id="profBio" placeholder="Tell us about yourself...">
             </div>
@@ -528,7 +546,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
@@ -575,7 +593,7 @@
                 case 'auth/weak-password': return 'Password should be at least 6 characters.';
                 case 'auth/popup-closed-by-user': return 'Sign-in cancelled.';
                 case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
-                default: return 'Authentication failed. Please check your settings.';
+                default: return `Error: ${code}. Please check your Firebase settings.`;
             }
         };
 
@@ -717,18 +735,55 @@
                 updateDashboard(docSnap.data());
                 setTimeout(() => switchView('success-screen'), 800);
             } else {
-                // Pre-fill profile name if it exists from Google
-                if (user.displayName) {
-                    document.getElementById('profName').value = user.displayName;
-                }
+                // Pre-fill profile info if it exists from Auth Provider
+                if (user.displayName) document.getElementById('profName').value = user.displayName;
+                if (user.phoneNumber) document.getElementById('profPhone').value = user.phoneNumber;
+
                 setTimeout(() => switchView('profile-screen'), 800);
             }
         }
+
+        window.handleLinkPhone = async () => {
+            const phone = document.getElementById('profPhone').value;
+            if (!phone) return showAlert('Enter phone number with +code', 'error');
+
+            try {
+                const user = auth.currentUser;
+                // Use a dedicated invisible recaptcha for linking
+                if (!window.linkRecaptcha) {
+                    window.linkRecaptcha = new RecaptchaVerifier(auth, 'verify-phone-btn', { 'size': 'invisible' });
+                }
+
+                phoneConfirmationResult = await linkWithPhoneNumber(user, phone, window.linkRecaptcha);
+                showAlert('Verification code sent!', 'success');
+                document.getElementById('phone-link-otp-group').style.display = 'block';
+                document.getElementById('verify-phone-btn').innerText = "Resend";
+            } catch (error) {
+                showAlert(mapError(error.code), 'error');
+            }
+        };
+
+        window.verifyLinkCode = async () => {
+            const code = document.getElementById('profLinkCode').value;
+            if (!code) return showAlert('Enter the code', 'error');
+
+            try {
+                await phoneConfirmationResult.confirm(code);
+                showAlert('Number verified and linked!', 'success');
+                document.getElementById('phone-link-otp-group').style.display = 'none';
+                document.getElementById('verify-phone-btn').innerHTML = '✓ Linked';
+                document.getElementById('verify-phone-btn').disabled = true;
+                document.getElementById('profPhone').disabled = true;
+            } catch (error) {
+                showAlert('Invalid code. Try again.', 'error');
+            }
+        };
 
         window.saveProfile = async () => {
             if (!auth.currentUser) return showAlert('Not authenticated', 'error');
 
             const name = document.getElementById('profName').value;
+            const phone = document.getElementById('profPhone').value;
             const bio = document.getElementById('profBio').value;
 
             if (!name) return showAlert('Please enter a display name', 'error');
@@ -736,6 +791,7 @@
             try {
                 const profileData = {
                     displayName: name,
+                    phone: phone,
                     bio: bio,
                     updatedAt: new Date().toISOString()
                 };
@@ -752,6 +808,7 @@
         function updateDashboard(data) {
             document.getElementById('dash-name').innerText = data.displayName;
             document.getElementById('dash-bio').innerText = data.bio || "(No bio provided)";
+            // Add phone to dashboard if you want
         }
 
         window.handleSignOut = () => signOut(auth).then(() => location.reload());
