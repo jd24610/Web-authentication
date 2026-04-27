@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureAuth - Premium Multi-Factor Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 30px 60px -12px rgba(99, 102, 241, 0.15);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+            background: linear-gradient(to right, #fff, #818cf8);
+            background-clip: text;
+            /* Compatibility fix */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-dim);
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .pass-wrapper {
+            position: relative;
+        }
+
+        .toggle-pass {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .toggle-pass:hover {
+            color: white;
+        }
+
+        button.primary-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button.primary-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        button.primary-btn:active {
+            transform: scale(0.98);
+        }
+
+        .switch-mode {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .switch-mode a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .switch-mode a:hover {
+            text-decoration: underline;
+        }
+
+        /* Screen States */
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* OTP Input */
+        .otp-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 24px 0;
+        }
+
+        .otp-box {
+            width: 45px;
+            height: 55px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            border-radius: 10px;
+        }
+
+        /* Feedback UI */
+        #alert-box {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                top: -50px;
+                opacity: 0;
+            }
+
+            to {
+                top: 24px;
+                opacity: 1;
+            }
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* Dashboard Styles */
+        .profile-display {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .profile-display h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .profile-display p {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="alert-box"></div>
+
+    <div class="container">
+
+        <!-- LOGIN SCREEN -->
+        <div id="login-screen" class="card screen active">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Securely log into your account</p>
+
+            <div class="input-group">
+                <label for="liEmail">Email Address</label>
+                <input type="email" id="liEmail" placeholder="name@company.com">
+            </div>
+
+            <div class="input-group">
+                <label for="liPass">Password</label>
+                <div class="pass-wrapper">
+                    <input type="password" id="liPass" placeholder="••••••••">
+                    <button class="toggle-pass" onclick="togglePass('liPass')">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+                <div style="text-align: right; margin-top: 8px;">
+                    <a href="#" onclick="switchView('forgot-password-screen')"
+                        style="font-size: 12px; color: var(--primary); text-decoration: none;">Forgot Password?</a>
+                </div>
+            </div>
+
+            <button class="primary-btn" onclick="handleLogin()">Sign In</button>
+
+            <div style="display: flex; align-items: center; margin: 20px 0; color: var(--text-dim);">
+                <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                <span style="padding: 0 10px; font-size: 12px;">OR</span>
+                <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+            </div>
+
+            <button class="primary-btn" onclick="handleGoogleLogin()"
+                style="background: white; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#FFC107"
+                        d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+                    <path fill="#FF3D00"
+                        d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                    <path fill="#4CAF50"
+                        d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                    <path fill="#1976D2"
+                        d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.036,35.17,44,30.344,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+                </svg>
+                Continue with Google
+            </button>
+
+            <button class="primary-btn" onclick="switchView('phone-login-screen')"
+                style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Sign in with Phone
+            </button>
+
+            <div class="switch-mode">
+                Don't have an account? <a href="#" onclick="switchView('signup-screen')">Register</a>
+            </div>
+        </div>
+
+        <!-- SIGNUP SCREEN -->
+        <div id="signup-screen" class="card screen">
+            <h1>Create Account</h1>
+            <p class="subtitle">Start your 14-day free trial</p>
+
+            <div class="input-group">
+                <label for="suEmail">Email Address</label>
+                <input type="email" id="suEmail" placeholder="name@company.com">
+            </div>
+
+            <div class="input-group">
+                <label for="suPass">Password</label>
+                <div class="pass-wrapper">
+                    <input type="password" id="suPass" placeholder="Create a strong password"
+                        oninput="validatePassword(this.value)">
+                    <button class="toggle-pass" onclick="togglePass('suPass')">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Password Validation Checklist -->
+                <div id="pass-rules" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div id="rule-len"
+                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot"
+                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                        8+ Characters
+                    </div>
+                    <div id="rule-num"
+                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot"
+                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                        Includes Number
+                    </div>
+                    <div id="rule-spec"
+                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot"
+                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                        Special Symbol
+                    </div>
+                    <div id="rule-case"
+                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot"
+                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                        Uppercase Letter
+                    </div>
+                </div>
+            </div>
+
+            <button class="primary-btn" onclick="handleSignup()">Create Account</button>
+            <div class="switch-mode">
+                Already have an account? <a href="#" onclick="switchView('login-screen')">Sign In</a>
+            </div>
+        </div>
+
+        <!-- OTP SCREEN -->
+        <div id="otp-screen" class="card screen">
+            <h1>Two-Factor Auth</h1>
+            <p class="subtitle">Enter the 6-digit code sent to your email</p>
+
+            <div class="otp-inputs">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 0)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 1)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 2)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 3)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 4)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 5)">
+            </div>
+
+            <button class="primary-btn" onclick="verifyOTP()">Verify Code</button>
+            <div class="switch-mode">
+                Didn't get a code? <a href="#">Resend</a>
+            </div>
+        </div>
+
+        <!-- PHONE LOGIN SCREEN -->
+        <div id="phone-login-screen" class="card screen">
+            <h1>Phone Sign In</h1>
+            <p class="subtitle">Enter your number with country code</p>
+
+            <div class="input-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="+1 555 123 4567">
+            </div>
+
+            <div id="recaptcha-container"></div>
+
+            <button class="primary-btn" id="send-code-btn" onclick="handlePhoneLogin()">Send SMS Code</button>
+            <div class="switch-mode">
+                Want to use email? <a href="#" onclick="switchView('login-screen')">Sign In</a>
+            </div>
+        </div>
+
+        <!-- PHONE OTP SCREEN -->
+        <div id="phone-otp-screen" class="card screen">
+            <h1>Verify SMS</h1>
+            <p class="subtitle">Enter the 6-digit code we sent you</p>
+
+            <div class="otp-inputs" id="phone-otp-inputs">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 0)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 1)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 2)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 3)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 4)">
+                <input type="text" class="otp-box" maxlength="1" onkeyup="moveFocus(this, 5)">
+            </div>
+
+            <button class="primary-btn" onclick="verifyPhoneOTP()">Verify & Log In</button>
+        </div>
+
+        <!-- PROFILE SETUP SCREEN -->
+        <div id="profile-screen" class="card screen">
+            <h1>Complete Profile</h1>
+            <p class="subtitle">Customize your public identity</p>
+
+            <div class="input-group">
+                <label for="profName">Display Name</label>
+                <input type="text" id="profName" placeholder="e.g. Alex Smith">
+            </div>
+
+            <div class="input-group">
+                <label for="profBio">Short Bio</label>
+                <input type="text" id="profBio" placeholder="Tell us about yourself...">
+            </div>
+
+            <button class="primary-btn" onclick="saveProfile()">Save & Finish</button>
+        </div>
+
+        <!-- FORGOT PASSWORD SCREEN -->
+        <div id="forgot-password-screen" class="card screen">
+            <h1>Reset Password</h1>
+            <p class="subtitle">We'll send a recovery link to your email</p>
+
+            <div class="input-group">
+                <label for="resetEmail">Email Address</label>
+                <input type="email" id="resetEmail" placeholder="name@company.com">
+            </div>
+
+            <button class="primary-btn" onclick="handleForgotPassword()">Send Reset Link</button>
+            <div class="switch-mode">
+                Remembered it? <a href="#" onclick="switchView('login-screen')">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div id="success-screen" class="card screen">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div
+                    style="width: 64px; height: 64px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <svg width="32" height="32" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h1>Login Successful</h1>
+                <div class="profile-display">
+                    <p>Welcome back,</p>
+                    <h3 id="dash-name">Loading...</h3>
+                    <p id="dash-bio" style="font-style: italic;"></p>
+                </div>
+            </div>
+            <button class="primary-btn" onclick="handleSignOut()" style="background: rgba(255,255,255,0.1)">Sign
+                Out</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3_a7H5HJv-RMJAq0GZSe36Cjqlsy2xbg",
+            authDomain: "web-authentication-1141b.firebaseapp.com",
+            projectId: "web-authentication-1141b",
+            storageBucket: "web-authentication-1141b.firebasestorage.app",
+            messagingSenderId: "1004490045960",
+            appId: "1:1004490045960:web:6f2fa4673228da20392fbd",
+            measurementId: "G-FV6LE273G8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        let phoneConfirmationResult = null;
+
+        // Initialize reCAPTCHA for Phone Auth
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible'
+        });
+
+        // --- AUTH LOGIC ---
+        const mapError = (code) => {
+            switch (code) {
+                case 'auth/user-not-found': return 'No account found with this email. Please register!';
+                case 'auth/wrong-password': return 'Incorrect password. Try again.';
+                case 'auth/invalid-credential': return 'Invalid login. Did you mean to Register first?';
+                case 'auth/email-already-in-use': return 'This email is already registered. Try logging in!';
+                case 'auth/invalid-email': return 'Please enter a valid email address.';
+                case 'auth/weak-password': return 'Password should be at least 6 characters.';
+                case 'auth/popup-closed-by-user': return 'Sign-in cancelled.';
+                case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
+                default: return 'Authentication failed. Please check your settings.';
+            }
+        };
+
+        window.validatePassword = (val) => {
+            const rules = {
+                len: val.length >= 8,
+                num: /\d/.test(val),
+                spec: /[!@#$%^&*(),.?":{}|<>]/.test(val),
+                case: /[A-Z]/.test(val)
+            };
+
+            for (const [id, passed] of Object.entries(rules)) {
+                const el = document.getElementById(`rule-${id}`);
+                const dot = el.querySelector('.dot');
+                if (passed) {
+                    el.style.color = 'var(--success)';
+                    dot.style.background = 'var(--success)';
+                } else {
+                    el.style.color = 'var(--text-dim)';
+                    dot.style.background = 'rgba(255,255,255,0.2)';
+                }
+            }
+            return Object.values(rules).every(v => v);
+        };
+
+        window.handleSignup = async () => {
+            const email = document.getElementById('suEmail').value;
+            const pass = document.getElementById('suPass').value;
+            if (!email || !pass) return showAlert('Please fill all fields', 'error');
+
+            if (!validatePassword(pass)) {
+                return showAlert('Please follow all password rules', 'error');
+            }
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                showAlert('Account created!', 'success');
+                setTimeout(() => switchView('login-screen'), 1000);
+            } catch (error) {
+                showAlert(mapError(error.code), 'error');
+            }
+        };
+
+        window.handleLogin = async () => {
+            const lockUntil = localStorage.getItem('lockout_until');
+            if (lockUntil && Date.now() < parseInt(lockUntil)) {
+                const remaining = Math.ceil((parseInt(lockUntil) - Date.now()) / 1000);
+                return showAlert(`Locked. Wait ${remaining}s`, 'error');
+            }
+
+            const email = document.getElementById('liEmail').value;
+            const pass = document.getElementById('liPass').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                showAlert('Logged in!', 'success');
+                setTimeout(() => switchView('otp-screen'), 800);
+            } catch (error) {
+                let attempts = parseInt(localStorage.getItem('login_attempts') || '0') + 1;
+                localStorage.setItem('login_attempts', attempts.toString());
+                if (attempts >= 3) {
+                    localStorage.setItem('lockout_until', (Date.now() + 30000).toString());
+                    localStorage.setItem('login_attempts', '0');
+                    showAlert('Blocked for 30s', 'error');
+                } else {
+                    showAlert(mapError(error.code), 'error');
+                }
+            }
+        };
+
+        window.handlePhoneLogin = async () => {
+            const phone = document.getElementById('phoneNumber').value;
+            if (!phone) return showAlert('Enter phone number with +code', 'error');
+
+            try {
+                phoneConfirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+                showAlert('SMS code sent!', 'success');
+                setTimeout(() => switchView('phone-otp-screen'), 800);
+            } catch (error) {
+                showAlert(mapError(error.code), 'error');
+                // Reset reCAPTCHA if it fails
+                if (window.recaptchaVerifier) window.recaptchaVerifier.render();
+            }
+        };
+
+        window.verifyPhoneOTP = async () => {
+            const boxes = document.querySelectorAll('#phone-otp-inputs .otp-box');
+            const code = Array.from(boxes).map(b => b.value).join('');
+            if (code.length < 6) return showAlert('Enter full code', 'error');
+
+            try {
+                const result = await phoneConfirmationResult.confirm(code);
+                showAlert('Verified!', 'success');
+                checkProfile(result.user);
+            } catch (error) {
+                showAlert('Invalid SMS code. Try again.', 'error');
+            }
+        };
+
+        window.handleGoogleLogin = async () => {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                showAlert(`Welcome ${result.user.displayName}!`, 'success');
+
+                // For social login, we can skip OTP and go straight to profile check
+                checkProfile(result.user);
+            } catch (error) {
+                showAlert(mapError(error.code), 'error');
+            }
+        };
+
+        window.handleForgotPassword = async () => {
+            const email = document.getElementById('resetEmail').value;
+            if (!email) return showAlert('Please enter your email', 'error');
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showAlert('Reset link sent to your email!', 'success');
+                setTimeout(() => switchView('login-screen'), 2000);
+            } catch (error) {
+                showAlert(mapError(error.code), 'error');
+            }
+        };
+
+        window.verifyOTP = async () => {
+            const boxes = document.querySelectorAll('.otp-box');
+            const code = Array.from(boxes).map(b => b.value).join('');
+            if (code.length < 6) return showAlert('Enter full code', 'error');
+
+            showAlert('Verified!', 'success');
+            checkProfile(auth.currentUser);
+        };
+
+        async function checkProfile(user) {
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                updateDashboard(docSnap.data());
+                setTimeout(() => switchView('success-screen'), 800);
+            } else {
+                // Pre-fill profile name if it exists from Google
+                if (user.displayName) {
+                    document.getElementById('profName').value = user.displayName;
+                }
+                setTimeout(() => switchView('profile-screen'), 800);
+            }
+        }
+
+        window.saveProfile = async () => {
+            if (!auth.currentUser) return showAlert('Not authenticated', 'error');
+
+            const name = document.getElementById('profName').value;
+            const bio = document.getElementById('profBio').value;
+
+            if (!name) return showAlert('Please enter a display name', 'error');
+
+            try {
+                const profileData = {
+                    displayName: name,
+                    bio: bio,
+                    updatedAt: new Date().toISOString()
+                };
+                await setDoc(doc(db, "users", auth.currentUser.uid), profileData);
+
+                showAlert('Profile Saved!', 'success');
+                updateDashboard(profileData);
+                setTimeout(() => switchView('success-screen'), 1000);
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        };
+
+        function updateDashboard(data) {
+            document.getElementById('dash-name').innerText = data.displayName;
+            document.getElementById('dash-bio').innerText = data.bio || "(No bio provided)";
+        }
+
+        window.handleSignOut = () => signOut(auth).then(() => location.reload());
+
+        // --- UI UTILS ---
+        window.switchView = (screenId) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        };
+
+        window.togglePass = (id) => {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        };
+
+        window.showAlert = (msg, type) => {
+            const box = document.getElementById('alert-box');
+            box.innerText = msg;
+            box.className = type === 'error' ? 'alert-error' : 'alert-success';
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 4000);
+        };
+
+        window.moveFocus = (el, index) => {
+            if (el.value.length === 1 && index < 5) {
+                document.querySelectorAll('.otp-box')[index + 1].focus();
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Session detected:", user.email);
+            }
+        });
+    </script>
+</body>
+
+</html>
