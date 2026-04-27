@@ -531,6 +531,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
 
         // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
@@ -549,6 +550,12 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
         const googleProvider = new GoogleAuthProvider();
+
+        // Initialize App Check
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider('AdrTqXFgUDqzEayAk3FkAnlBoTu_mTIuk_aEYtYGfuUD2UaI3WU7UPWFAXP0SIw68PtSn4B6OpvBPbSv4M12xKWPrGgleewNZDsA3sim89HFj77I7-MfI2DzAZCwPywpfJdFVGRyYXb-TMYBgAi8Smnp'),
+            isTokenAutoRefreshEnabled: true
+        });
 
         let phoneConfirmationResult = null;
 
