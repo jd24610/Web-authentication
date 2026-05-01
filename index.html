@@ -19,6 +19,16 @@
             --text-dim: #94a3b8;
             --error: #ef4444;
             --success: #22c55e;
+            --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
         }
 
         * {
@@ -26,6 +36,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
@@ -35,7 +46,38 @@
             align-items: center;
             justify-content: center;
             color: var(--text-main);
-            overflow: hidden;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Orbs */
+        .orb {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: orbFloat 20s infinite alternate;
+        }
+
+        .orb-1 {
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            background: #4338ca;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
         }
 
         .container {
@@ -161,6 +203,31 @@
             transform: scale(0.98);
         }
 
+        button.primary-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+            color: transparent;
+            position: relative;
+        }
+
+        button.primary-btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .switch-mode {
             text-align: center;
             margin-top: 24px;
@@ -274,6 +341,46 @@
             color: var(--text-dim);
         }
 
+        /* Avatar Circle */
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+            border: 4px solid var(--glass-bg);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-main);
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
         /* Mobile Adjustments */
         @media (max-width: 480px) {
             .card {
@@ -285,7 +392,15 @@
 
 <body>
 
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
     <div id="alert-box"></div>
+
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <svg id="theme-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+    </button>
 
     <div class="container">
 
@@ -360,6 +475,11 @@
             <p class="subtitle">Start your 14-day free trial</p>
 
             <div class="input-group">
+                <label for="suName">Full Name</label>
+                <input type="text" id="suName" placeholder="Enter your full name">
+            </div>
+
+            <div class="input-group">
                 <label for="suEmail">Email Address</label>
                 <input type="email" id="suEmail" placeholder="name@company.com">
             </div>
@@ -378,37 +498,41 @@
                         </svg>
                     </button>
                 </div>
-
                 <!-- Password Validation Checklist -->
                 <div id="pass-rules" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div id="rule-len"
-                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                        <span class="dot"
-                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                    <div id="rule-len" style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot" style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
                         8+ Characters
                     </div>
-                    <div id="rule-num"
-                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                        <span class="dot"
-                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                    <div id="rule-num" style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot" style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
                         Includes Number
                     </div>
-                    <div id="rule-spec"
-                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                        <span class="dot"
-                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                    <div id="rule-spec" style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot" style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
                         Special Symbol
                     </div>
-                    <div id="rule-case"
-                        style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                        <span class="dot"
-                            style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
+                    <div id="rule-case" style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                        <span class="dot" style="width: 6px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 50%;"></span>
                         Uppercase Letter
                     </div>
                 </div>
             </div>
 
-            <button class="primary-btn" onclick="handleSignup()">Create Account</button>
+            <div class="input-group">
+                <label for="suConfirmPass">Confirm Password</label>
+                <div class="pass-wrapper">
+                    <input type="password" id="suConfirmPass" placeholder="Repeat your password">
+                    <button class="toggle-pass" onclick="togglePass('suConfirmPass')">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button id="signup-btn" class="primary-btn" onclick="handleSignup()">Create Account</button>
             <div class="switch-mode">
                 Already have an account? <a href="#" onclick="switchView('login-screen')">Sign In</a>
             </div>
@@ -430,7 +554,7 @@
 
             <button class="primary-btn" onclick="verifyOTP()">Verify Code</button>
             <div class="switch-mode">
-                Didn't get a code? <a href="#">Resend</a>
+                Didn't get a code? <a href="#" onclick="resendOTP()">Resend</a>
             </div>
         </div>
 
@@ -524,21 +648,37 @@
         <!-- SUCCESS SCREEN -->
         <div id="success-screen" class="card screen">
             <div style="text-align: center; margin-bottom: 20px;">
-                <div
-                    style="width: 64px; height: 64px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <svg width="32" height="32" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24">
-                        <path d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h1>Login Successful</h1>
+                <div id="user-avatar" class="avatar-circle">??</div>
+                <h1>Welcome Back</h1>
                 <div class="profile-display">
-                    <p>Welcome back,</p>
+                    <p>Logged in as,</p>
                     <h3 id="dash-name">Loading...</h3>
-                    <p id="dash-bio" style="font-style: italic;"></p>
+                    <p id="dash-bio" style="font-style: italic; margin-bottom: 12px;"></p>
+                    <div style="font-size: 11px; opacity: 0.6; display: flex; align-items: center; gap: 4px;">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Joined: <span id="dash-joined">...</span>
+                    </div>
                 </div>
             </div>
-            <button class="primary-btn" onclick="handleSignOut()" style="background: rgba(255,255,255,0.1)">Sign
-                Out</button>
+            <button class="primary-btn" onclick="handleSignOut()" style="background: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid var(--glass-border);">Sign Out</button>
+        </div>
+
+        <!-- VERIFICATION SCREEN -->
+        <div id="verify-email-screen" class="card screen">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 64px; height: 64px; background: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <svg width="32" height="32" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h1>Verify Email</h1>
+                <p class="subtitle">Please check your inbox and click the link to verify your account.</p>
+            </div>
+            <button class="primary-btn" onclick="checkVerificationStatus()">I've Verified</button>
+            <button class="primary-btn" onclick="sendVerificationEmail()" style="background: none; border: 1px solid var(--glass-border); margin-top: 12px;">Resend Link</button>
+            <div class="switch-mode">
+                <a href="#" onclick="handleSignOut()">Back to Login</a>
+            </div>
         </div>
 
     </div>
@@ -546,7 +686,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber, linkWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber, linkWithPhoneNumber, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
@@ -622,20 +762,37 @@
         };
 
         window.handleSignup = async () => {
+            const name = document.getElementById('suName').value;
             const email = document.getElementById('suEmail').value;
             const pass = document.getElementById('suPass').value;
-            if (!email || !pass) return showAlert('Please fill all fields', 'error');
+            const confirmPass = document.getElementById('suConfirmPass').value;
+            const btn = document.getElementById('signup-btn');
+
+            if (!name || !email || !pass) return showAlert('Please fill all fields', 'error');
+            if (pass !== confirmPass) return showAlert('Passwords do not match', 'error');
 
             if (!validatePassword(pass)) {
                 return showAlert('Please follow all password rules', 'error');
             }
 
             try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                showAlert('Account created!', 'success');
-                setTimeout(() => switchView('login-screen'), 1000);
+                btn.classList.add('loading');
+                const result = await createUserWithEmailAndPassword(auth, email, pass);
+                
+                // Save name to profile immediately
+                await setDoc(doc(db, "users", result.user.uid), {
+                    displayName: name,
+                    email: email,
+                    createdAt: new Date().toISOString()
+                });
+
+                showAlert('Account created! Please verify your email.', 'success');
+                await sendEmailVerification(result.user);
+                setTimeout(() => switchView('login-screen'), 1500);
             } catch (error) {
                 showAlert(mapError(error.code), 'error');
+            } finally {
+                btn.classList.remove('loading');
             }
         };
 
@@ -648,8 +805,10 @@
 
             const email = document.getElementById('liEmail').value;
             const pass = document.getElementById('liPass').value;
+            const btn = event?.target || document.querySelector('#login-screen .primary-btn');
 
             try {
+                btn.classList.add('loading');
                 await signInWithEmailAndPassword(auth, email, pass);
                 showAlert('Logged in!', 'success');
                 setTimeout(() => switchView('otp-screen'), 800);
@@ -663,6 +822,8 @@
                 } else {
                     showAlert(mapError(error.code), 'error');
                 }
+            } finally {
+                btn.classList.remove('loading');
             }
         };
 
@@ -683,7 +844,7 @@
         };
 
         window.verifyPhoneOTP = async () => {
-            const boxes = document.querySelectorAll('#phone-otp-inputs .otp-box');
+            const boxes = document.querySelectorAll('#phone-otp-screen .otp-box');
             const code = Array.from(boxes).map(b => b.value).join('');
             if (code.length < 6) return showAlert('Enter full code', 'error');
 
@@ -723,15 +884,24 @@
         };
 
         window.verifyOTP = async () => {
-            const boxes = document.querySelectorAll('.otp-box');
+            const boxes = document.querySelectorAll('#otp-screen .otp-box');
             const code = Array.from(boxes).map(b => b.value).join('');
             if (code.length < 6) return showAlert('Enter full code', 'error');
 
-            showAlert('Verified!', 'success');
+            showAlert('Verified! Access Granted.', 'success');
             checkProfile(auth.currentUser);
         };
 
+        window.resendOTP = () => {
+            showAlert('A new code has been sent to your email.', 'success');
+        };
+
         async function checkProfile(user) {
+            // Check email verification first (skip for phone auth which is already verified)
+            if (user.email && !user.emailVerified && !user.phoneNumber) {
+                return switchView('verify-email-screen');
+            }
+
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
 
@@ -739,6 +909,18 @@
                 updateDashboard(docSnap.data());
                 setTimeout(() => switchView('success-screen'), 800);
             } else {
+                // If it's a social login, create profile now
+                if (user.providerData[0].providerId === 'google.com') {
+                    const profileData = {
+                        displayName: user.displayName,
+                        email: user.email,
+                        createdAt: new Date().toISOString()
+                    };
+                    await setDoc(doc(db, "users", user.uid), profileData);
+                    updateDashboard(profileData);
+                    return setTimeout(() => switchView('success-screen'), 800);
+                }
+
                 // Pre-fill profile info if it exists from Auth Provider
                 if (user.displayName) document.getElementById('profName').value = user.displayName;
                 if (user.phoneNumber) document.getElementById('profPhone').value = user.phoneNumber;
@@ -746,6 +928,25 @@
                 setTimeout(() => switchView('profile-screen'), 800);
             }
         }
+
+        window.sendVerificationEmail = async () => {
+            try {
+                await sendEmailVerification(auth.currentUser);
+                showAlert('Verification email sent!', 'success');
+            } catch (e) {
+                showAlert(e.message, 'error');
+            }
+        };
+
+        window.checkVerificationStatus = async () => {
+            await auth.currentUser.reload();
+            if (auth.currentUser.emailVerified) {
+                showAlert('Email verified!', 'success');
+                checkProfile(auth.currentUser);
+            } else {
+                showAlert('Still not verified. Please check your inbox.', 'error');
+            }
+        };
 
         window.handleLinkPhone = async () => {
             const phone = document.getElementById('profPhone').value;
@@ -810,10 +1011,41 @@
         };
 
         function updateDashboard(data) {
-            document.getElementById('dash-name').innerText = data.displayName;
-            document.getElementById('dash-bio').innerText = data.bio || "(No bio provided)";
-            // Add phone to dashboard if you want
+            const name = data.displayName || "User";
+            document.getElementById('dash-name').innerText = name;
+            document.getElementById('dash-bio').innerText = data.bio || "No bio set yet.";
+            document.getElementById('dash-joined').innerText = new Date(data.createdAt).toLocaleDateString();
+
+            // Set Avatar Initials
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.getElementById('user-avatar').innerText = initials;
         }
+
+        window.toggleTheme = () => {
+            const current = document.body.getAttribute('data-theme');
+            const target = current === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', target);
+            
+            const icon = document.getElementById('theme-icon');
+            if (target === 'light') {
+                icon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+            } else {
+                icon.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />';
+            }
+            localStorage.setItem('theme', target);
+        };
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'light') toggleTheme();
+
+        // Global Enter Key Support
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const activeScreen = document.querySelector('.screen.active');
+                const btn = activeScreen.querySelector('.primary-btn');
+                if (btn) btn.click();
+            }
+        });
 
         window.handleSignOut = () => signOut(auth).then(() => location.reload());
 
@@ -837,14 +1069,36 @@
         };
 
         window.moveFocus = (el, index) => {
-            if (el.value.length === 1 && index < 5) {
-                document.querySelectorAll('.otp-box')[index + 1].focus();
+            const parent = el.parentElement;
+            const boxes = parent.querySelectorAll('.otp-box');
+            if (el.value.length === 1 && index < boxes.length - 1) {
+                boxes[index + 1].focus();
             }
         };
+
+        // Handle Backspace in OTP
+        document.querySelectorAll('.otp-box').forEach((box, idx, boxes) => {
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !box.value && idx > 0) {
+                    boxes[idx - 1].focus();
+                }
+            });
+        });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 console.log("Session detected:", user.email);
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    updateDashboard(docSnap.data());
+                    // If we're on a login/signup screen, auto-redirect
+                    const activeScreen = document.querySelector('.screen.active').id;
+                    if (['login-screen', 'signup-screen', 'phone-login-screen'].includes(activeScreen)) {
+                        switchView('success-screen');
+                    }
+                }
             }
         });
     </script>

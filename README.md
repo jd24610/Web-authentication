@@ -10,15 +10,18 @@ A high-performance, professional-grade authentication system built with **Google
 
 ## 🚀 Key Features
 
-*   **🔒 Multi-Factor Authentication (MFA):** Simulated 6-digit OTP verification for enhanced account security.
-*   **📱 Phone (SMS) Sign-In:** Integrated Firebase Phone Authentication with invisible reCAPTCHA protection.
-*   **🌐 Google Social Login:** Seamless one-click authentication using Google OAuth.
-*   **🛠️ Password Security:** Real-time password strength validation rules (Length, Case, Numbers, Symbols).
-*   **📉 Smart Account Lockout:** Automatic 30-second block after 3 failed login attempts to prevent brute-force attacks.
-*   **💾 Cloud Profile Storage:** Persistent user data saved to **Cloud Firestore** (Display Names, Bios).
-*   **📧 Password Recovery:** Integrated "Forgot Password" automated email recovery system.
-*   **✨ Premium Design:** Fully responsive, dark-mode Glassmorphism UI with smooth backdrop blurs and CSS transitions.
-
+*   **🌓 Adaptive Theme Engine:** Seamless **Dark/Light Mode** switching with persistence via `localStorage`.
+*   **👤 Dynamic Identity:** Automated **Avatar Generation** using user initials and stylish gradients.
+*   **🛡️ Verification Gate:** Enforced **Email Verification** logic that protects the dashboard from unverified accounts.
+*   **⌨️ Productivity Shortcuts:** Universal **Enter key support** for faster navigation and form submission.
+*   **✨ Premium Design:** Fully responsive, glassmorphism UI with **animated background orbs**.
+*   **🔒 Multi-Factor Authentication (MFA):** Professional 6-digit OTP flow with smart focus and backspace support.
+*   **📱 Phone (SMS) Sign-In:** Integrated Firebase Phone Auth with invisible reCAPTCHA.
+*   **🌐 Google Social Login:** One-click OAuth with automatic profile synchronization.
+*   **🛠️ Advanced Signup:** Full Name capture, password strength validation, and confirmation matching.
+*   **⏳ UX Polish:** Real-time Loading Spinners and smooth screen transitions.
+*   **🔄 Session Persistence:** Intelligent session detection and auto-redirect.
+*   **💾 Cloud Firestore:** Persistent profile storage (Names, Bios, Join Dates).
 ---
 
 ## 🛠️ Tech Stack
