@@ -472,7 +472,7 @@
         <!-- SIGNUP SCREEN -->
         <div id="signup-screen" class="card screen">
             <h1>Create Account</h1>
-            <p class="subtitle">Start your 14-day free trial</p>
+            <p class="subtitle">Join the Manhattan University community</p>
 
             <div class="input-group">
                 <label for="suName">Full Name</label>
@@ -646,21 +646,49 @@
         </div>
 
         <!-- SUCCESS SCREEN -->
-        <div id="success-screen" class="card screen">
-            <div style="text-align: center; margin-bottom: 20px;">
+        <div id="success-screen" class="card screen" style="max-width: 500px;">
+            <div style="text-align: center; margin-bottom: 30px;">
                 <div id="user-avatar" class="avatar-circle">??</div>
-                <h1>Welcome Back</h1>
-                <div class="profile-display">
-                    <p>Logged in as,</p>
-                    <h3 id="dash-name">Loading...</h3>
-                    <p id="dash-bio" style="font-style: italic; margin-bottom: 12px;"></p>
-                    <div style="font-size: 11px; opacity: 0.6; display: flex; align-items: center; gap: 4px;">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <h1 id="welcome-msg" style="line-height: 1.4;">Welcome to Manhattan University</h1>
+                <p id="dash-page-name" style="font-size: 18px; color: var(--primary); font-weight: 600; margin-top: 10px;"></p>
+                <div class="profile-display" style="border: none; background: none; padding: 10px;">
+                    <p id="dash-bio" style="font-style: italic; opacity: 0.8;"></p>
+                    <div style="font-size: 11px; opacity: 0.5; margin-top: 20px;">
                         Joined: <span id="dash-joined">...</span>
                     </div>
                 </div>
+                <!-- Admin Access Link -->
+                <div style="margin-top: 20px;">
+                    <a href="#" onclick="openAdminPage()" style="font-size: 12px; color: var(--primary); text-decoration: none; border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 20px;">University Admin Portal</a>
+                </div>
             </div>
-            <button class="primary-btn" onclick="handleSignOut()" style="background: rgba(255,255,255,0.1); color: var(--text-main); border: 1px solid var(--glass-border);">Sign Out</button>
+            <button class="primary-btn" onclick="handleSignOut()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-dim);">Logout from University Portal</button>
+        </div>
+
+        <!-- ADMIN SCREEN -->
+        <div id="admin-screen" class="card screen" style="max-width: 800px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h1>User Directory</h1>
+                <button onclick="switchView('success-screen')" style="background: none; border: 1px solid var(--glass-border); color: var(--text-dim); padding: 4px 12px; border-radius: 8px; cursor: pointer;">Back</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-dim);">
+                            <th style="padding: 12px;">User</th>
+                            <th style="padding: 12px;">Email</th>
+                            <th style="padding: 12px;">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-user-list">
+                        <!-- Rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="admin-loading" style="text-align: center; padding: 20px; display: none;">
+                <div class="primary-btn loading" style="background: none; width: 40px; height: 40px; margin: 0 auto;"></div>
+            </div>
         </div>
 
         <!-- VERIFICATION SCREEN -->
@@ -687,7 +715,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, RecaptchaVerifier, signInWithPhoneNumber, linkWithPhoneNumber, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js";
 
@@ -735,6 +763,7 @@
                 case 'auth/weak-password': return 'Password should be at least 6 characters.';
                 case 'auth/popup-closed-by-user': return 'Sign-in cancelled.';
                 case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
+                case 'auth/unauthorized-domain': return 'Domain not authorized. Please run on a local server (http://localhost) and add it to Firebase Console > Auth > Settings.';
                 default: return `Error: ${code}. Please check your Firebase settings.`;
             }
         };
@@ -1012,8 +1041,8 @@
 
         function updateDashboard(data) {
             const name = data.displayName || "User";
-            document.getElementById('dash-name').innerText = name;
-            document.getElementById('dash-bio').innerText = data.bio || "No bio set yet.";
+            document.getElementById('dash-page-name').innerText = `${name} Page`;
+            document.getElementById('dash-bio').innerText = data.bio || "No university bio set.";
             document.getElementById('dash-joined').innerText = new Date(data.createdAt).toLocaleDateString();
 
             // Set Avatar Initials
@@ -1046,6 +1075,36 @@
                 if (btn) btn.click();
             }
         });
+
+        window.openAdminPage = async () => {
+            switchView('admin-screen');
+            const list = document.getElementById('admin-user-list');
+            const loading = document.getElementById('admin-loading');
+            
+            list.innerHTML = '';
+            loading.style.display = 'block';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                loading.style.display = 'none';
+                
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                    row.innerHTML = `
+                        <td style="padding: 12px; font-weight: 600;">${user.displayName || 'Anonymous'}</td>
+                        <td style="padding: 12px; color: var(--text-dim);">${user.email || 'N/A'}</td>
+                        <td style="padding: 12px; font-size: 12px;">${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}</td>
+                    `;
+                    list.appendChild(row);
+                });
+            } catch (error) {
+                loading.style.display = 'none';
+                showAlert("Error loading users. Check Firestore rules.", "error");
+                console.error(error);
+            }
+        };
 
         window.handleSignOut = () => signOut(auth).then(() => location.reload());
 
