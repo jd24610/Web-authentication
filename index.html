@@ -602,11 +602,12 @@
         <!-- PHONE LOGIN SCREEN -->
         <div id="phone-login-screen" class="card screen">
             <h1>Phone Sign In</h1>
-            <p class="subtitle">Enter your number with country code</p>
+            <p class="subtitle">Enter your US number or include country code</p>
 
             <div class="input-group">
                 <label for="phoneNumber">Phone Number</label>
-                <input type="tel" id="phoneNumber" placeholder="+1 555 123 4567">
+                <input type="tel" id="phoneNumber" placeholder="6463222356 or +16463222356">
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">🇺🇸 US numbers will have +1 added automatically</div>
             </div>
 
             <div id="recaptcha-container"></div>
@@ -804,7 +805,8 @@
                 case 'auth/weak-password': return 'Password should be at least 6 characters.';
                 case 'auth/popup-closed-by-user': return 'Sign-in cancelled.';
                 case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
-                case 'auth/unauthorized-domain': return 'Domain not authorized. Please run on a local server (http://localhost) and add it to Firebase Console > Auth > Settings.';
+                case 'auth/unauthorized-domain': return 'Domain not authorized. Please run on localhost and add it to Firebase Console > Auth > Settings.';
+                case 'auth/invalid-phone-number': return 'Invalid phone number. Use format: +16463222356 (include country code).';
                 default: return `Error: ${code}. Please check your Firebase settings.`;
             }
         };
@@ -898,8 +900,13 @@
         };
 
         window.handlePhoneLogin = async () => {
-            const phone = document.getElementById('phoneNumber').value;
-            if (!phone) return showAlert('Enter phone number with +code', 'error');
+            let phone = document.getElementById('phoneNumber').value.trim();
+            if (!phone) return showAlert('Enter a phone number', 'error');
+
+            // Auto-add +1 for US numbers if no country code given
+            if (!phone.startsWith('+')) {
+                phone = '+1' + phone.replace(/\D/g, '');
+            }
 
             try {
                 phoneConfirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
@@ -907,8 +914,7 @@
                 setTimeout(() => switchView('phone-otp-screen'), 800);
             } catch (error) {
                 console.error("Phone Auth Error:", error);
-                showAlert(`Error: ${error.message} (${error.code})`, 'error');
-                // Reset reCAPTCHA if it fails
+                showAlert(mapError(error.code), 'error');
                 if (window.recaptchaVerifier) window.recaptchaVerifier.render();
             }
         };
