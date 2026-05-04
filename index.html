@@ -1091,11 +1091,26 @@
             document.getElementById('user-avatar').innerText = initials;
         }
 
+        function applyInputStyles(theme) {
+            document.querySelectorAll('input').forEach(inp => {
+                if (theme === 'light') {
+                    inp.style.color = '#0f172a';
+                    inp.style.background = '#f1f5f9';
+                    inp.style.border = '1.5px solid #94a3b8';
+                } else {
+                    inp.style.color = '#f8fafc';
+                    inp.style.background = 'rgba(255,255,255,0.06)';
+                    inp.style.border = '1px solid rgba(255,255,255,0.15)';
+                }
+            });
+        }
+
         window.toggleTheme = () => {
             const current = document.body.getAttribute('data-theme');
             const target = current === 'light' ? 'dark' : 'light';
             document.body.setAttribute('data-theme', target);
-            
+            applyInputStyles(target);
+
             const icon = document.getElementById('theme-icon');
             if (target === 'light') {
                 icon.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
@@ -1105,8 +1120,13 @@
             localStorage.setItem('theme', target);
         };
 
-        // Load saved theme
-        if (localStorage.getItem('theme') === 'light') toggleTheme();
+        // Load saved theme and apply input styles immediately
+        const _savedTheme = localStorage.getItem('theme');
+        if (_savedTheme === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+            document.getElementById('theme-icon').innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+        }
+        applyInputStyles(_savedTheme || 'dark');
 
         // Global Enter Key Support
         document.addEventListener('keypress', (e) => {
