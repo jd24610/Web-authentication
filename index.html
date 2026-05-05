@@ -937,12 +937,10 @@
             try {
                 const result = await signInWithPopup(auth, googleProvider);
                 showAlert(`Welcome ${result.user.displayName}!`, 'success');
-
-                // For social login, we can skip OTP and go straight to profile check
                 checkProfile(result.user);
             } catch (error) {
                 console.error("Google Auth Error:", error);
-                showAlert(`Error: ${error.message} (${error.code})`, 'error');
+                showAlert(mapError(error.code), 'error');
             }
         };
 
